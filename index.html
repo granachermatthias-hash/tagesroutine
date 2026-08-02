@@ -233,12 +233,11 @@
 
   /* ---------- BLOCKS ---------- */
   .blocks {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
     margin: 10px 4px 6px;
   }
-  @media (min-width: 560px) { .blocks { grid-template-columns: repeat(4, 1fr); } }
-
-  .block { perspective: 900px; min-height: 128px; }
+  .block { perspective: 900px; min-height: 128px; flex: 0 1 calc(50% - 7px); }
+  @media (min-width: 560px) { .block { flex-basis: calc(25% - 10px); } }
   .card {
     position: relative; width: 100%; height: 100%; min-height: 128px;
     transform-style: preserve-3d; -webkit-transform-style: preserve-3d; cursor: pointer;
@@ -256,18 +255,24 @@
     transition: background .7s ease, border-color .7s ease;
   }
   .face .ort {
-    font-family: var(--font-head); font-weight: 600; font-size: 15px;
+    font-family: var(--font-head); font-weight: 600; font-size: 14px;
     letter-spacing: .04em; color: var(--accent); line-height: 1.15;
+    white-space: pre-line;
     transition: color .7s ease;
   }
   .face .tat {
-    font-family: var(--font-body); font-size: 12px; color: var(--text-dim);
+    font-family: var(--font-body); font-size: 11px; color: var(--text-dim);
     line-height: 1.35; margin-top: 7px; transition: color .7s ease;
   }
   .face .rivet {
     position: absolute; bottom: 8px; right: 9px; width: 6px; height: 6px;
     border-radius: 50%; background: var(--metal);
     box-shadow: inset 0 0 2px rgba(0,0,0,.7);
+  }
+  /* Kachel ohne Beschreibung: Titel füllt den ganzen Kasten */
+  .face.front.solo { align-items: center; justify-content: center; text-align: center; }
+  .face.front.solo .ort {
+    font-size: clamp(16px, 4.4vw, 19px); letter-spacing: .06em; line-height: 1.25;
   }
   .face.back {
     transform: rotateY(180deg);
@@ -284,6 +289,24 @@
 
   /* ---------- FOOTER ---------- */
   .foot { display: flex; justify-content: center; margin-top: 12px; }
+  /* Fortschritt */
+  .progress { margin: 14px 4px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .progress .ptrack {
+    width: 100%; max-width: 320px; height: 8px; border-radius: 5px;
+    background: var(--bg2); border: 1px solid var(--metal-lo);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.55); overflow: hidden;
+  }
+  .progress .pfill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--metal-lo), var(--accent));
+    box-shadow: 0 0 8px var(--glow);
+    transition: width .45s cubic-bezier(.4,.2,.2,1);
+  }
+  .progress .plabel {
+    font-family: var(--font-head); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .progress .plabel span { color: var(--accent); text-shadow: 0 0 8px var(--glow); }
   .sound {
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
     font-family: var(--font-head); font-size: 11px; letter-spacing: .1em;
@@ -380,8 +403,8 @@
     .blocks { gap: 10px; margin: 8px 2px 4px; }
     .block, .card { min-height: 116px; }
     .face { padding: 11px 10px; }
-    .face .ort { font-size: 14px; }
-    .face .tat { font-size: 11.5px; margin-top: 5px; }
+    .face .ort { font-size: 13px; }
+    .face .tat { font-size: 10.5px; margin-top: 5px; }
     .sound { padding: 8px 16px; font-size: 12px; }
   }
   @media (max-width: 360px) {
@@ -389,7 +412,7 @@
     .weekday { font-size: clamp(21px, 8.4vw, 32px); letter-spacing: .08em; }
     .switch { width: 46px; height: 24px; }
     .plate { min-width: 98px; }
-    .blocks { grid-template-columns: 1fr; }
+    .block { flex-basis: 100%; }
     .block, .card { min-height: 92px; }
   }
 
@@ -485,6 +508,11 @@
     <div class="phase-name" id="phaseName">Morgen</div>
   </div>
 
+  <div class="progress" id="progress" aria-live="polite">
+    <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    <div class="plabel"><span id="pcount">0</span> / <span id="ptotal">0</span> Blöcke erledigt</div>
+  </div>
+
   <div class="blocks" id="blocks"></div>
 
   <div class="foot">
@@ -500,28 +528,25 @@
 
   const ROUTINE = {
     morgen: [
-      ["Bad", "Morgenhygiene: Gesicht, Zähne, Bart, Creme"],
-      ["Trainingsraum", "In Schlafklamotten Krafttraining & Nachrichten"],
-      ["Waschküche", "Bürokleidung Casual Business"],
-      ["Küche", "Frühstück, Kalendercheck, To-Do-Check, Duolingo"]
+      ["Hygiene\nBlock 1", ""],
+      ["Training\nBlock 1", ""],
+      ["Lernen\nBlock 1", ""],
+      ["Kalorien\nBlock 1", ""]
     ],
     mittag: [
-      ["Auto Hinweg", "Norwegisch Content"],
-      ["Arbeit / Homeoffice", "To-Do-Liste, Mastersystem, KI-Unterhaltung"],
-      ["Auto Heimweg", "Podcasts, evtl. To-Dos"],
-      ["Zuhause", "High Intense Kardio mit Musik & Duschen"]
+      ["Arbeit\nBlock 1", ""],
+      ["To-Do\nBlock 1", ""]
     ],
     nachmittag: [
-      ["Spaziergang / Garten", "Sassy-Quality-Time"],
-      ["Wohnzimmer oder Garten", "Schreiben / Lesen"],
-      ["Schreibtisch", "Conny Hausaufgaben / Lernen"],
-      ["Zuhause", "Aufräumen, evtl. Kochen, Hausarbeit"]
+      ["Training\nBlock 2", ""],
+      ["Sassy\nBlock 1", ""],
+      ["Hygiene\nBlock 2", ""],
+      ["Lernen\nBlock 2", ""]
     ],
     abend: [
-      ["Esszimmer", "Abendessen (große Mahlzeit, keine Süßigkeiten), Abräumen"],
-      ["Zuhause", "Family Quality Time"],
-      ["Spaziergang / Garten", "Sassy Training"],
-      ["Infotainment / Feed / Freizeit", ""]
+      ["Kalorien\nBlock 2", ""],
+      ["Schreiben\nBlock 1", ""],
+      ["Sassy\nBlock 2", ""]
     ]
   };
 
@@ -635,6 +660,10 @@
   const surgeEl   = document.getElementById("surge");
   const soundEl   = document.getElementById("sound");
   const soundTxt  = document.getElementById("soundTxt");
+  const pfillEl   = document.getElementById("pfill");
+  const pcountEl  = document.getElementById("pcount");
+  const ptotalEl  = document.getElementById("ptotal");
+  const TOTAL     = PHASES.reduce((n,ph)=>n+ROUTINE[ph].length,0);
 
   // build ticks + labels
   (function buildGauge(){
@@ -679,7 +708,7 @@
       block.dataset.id = id;
 
       const card = document.createElement("div"); card.className = "card";
-      const front = document.createElement("div"); front.className = "face front";
+      const front = document.createElement("div"); front.className = "face front" + (item[1] ? "" : " solo");
       const ort = document.createElement("div"); ort.className = "ort"; ort.textContent = item[0];
       front.appendChild(ort);
       if (item[1]) { const tat = document.createElement("div"); tat.className="tat"; tat.textContent=item[1]; front.appendChild(tat); }
@@ -694,6 +723,7 @@
       block.addEventListener("click", ()=> toggleBlock(block, id));
       blocksEl.appendChild(block);
     });
+    updateProgress();
   }
 
   function toggleBlock(block, id){
@@ -701,6 +731,14 @@
     else { done.add(id); block.classList.add("done"); }
     sndBlock();
     sset("routine:done:"+dayKey, JSON.stringify([...done]));
+    updateProgress();
+  }
+
+  function updateProgress(){
+    const cnt = Math.min(done.size, TOTAL);
+    pcountEl.textContent = cnt;
+    ptotalEl.textContent = TOTAL;
+    pfillEl.style.width = TOTAL ? (cnt / TOTAL * 100) + "%" : "0%";
   }
 
   function setPhase(p, withSound){

@@ -190,7 +190,8 @@
   }
 
   /* ---------- GAUGE ---------- */
-  .gauge-wrap { display: flex; flex-direction: column; align-items: center; margin: 2px 0 8px; }
+  .gauge-wrap { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; margin: 2px auto 8px; max-width: 400px; }
+  .gauge-col { display: flex; flex-direction: column; align-items: center; flex: 1 1 auto; min-width: 0; }
   svg.gauge { width: min(100%, 380px); height: auto; display: block; overflow: visible; }
 
   .gauge-ring { fill: none; stroke: var(--metal-lo); stroke-width: 16; transition: stroke .7s ease; }
@@ -307,6 +308,23 @@
     text-transform: uppercase; color: var(--text-dim);
   }
   .progress .plabel span { color: var(--accent); text-shadow: 0 0 8px var(--glow); }
+  /* Wochenübersicht rechts neben der Uhr */
+  .week { flex: 0 0 60px; align-self: center; display: flex; flex-direction: column; gap: 5px; }
+  .wk-title {
+    font-family: var(--font-head); font-size: 9px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--text-dim); text-align: center; margin-bottom: 1px;
+  }
+  .wk-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 7px; border-radius: 6px;
+    background: linear-gradient(165deg, var(--panel), var(--bg2));
+    border: 1px solid var(--metal-lo);
+    transition: border-color .4s ease, box-shadow .4s ease;
+  }
+  .wk-row .wk-day { font-family: var(--font-head); font-size: 11px; letter-spacing: .04em; color: var(--text-dim); }
+  .wk-row .wk-cnt { font-family: var(--font-head); font-size: 12px; font-weight: 600; color: var(--accent); }
+  .wk-row.today { border-color: var(--accent); box-shadow: 0 0 8px var(--glow); }
+  .wk-row.today .wk-day { color: var(--accent); }
   .sound {
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
     font-family: var(--font-head); font-size: 11px; letter-spacing: .1em;
@@ -325,7 +343,7 @@
   .machine.theme-free .deco-cyber { opacity: 1; }
 
   /* keep interactive content above decoration */
-  .head, .toprow, .gauge-wrap, .blocks, .foot { position: relative; z-index: 2; }
+  .head, .toprow, .gauge-wrap, .progress, .blocks, .foot { position: relative; z-index: 2; }
 
   /* -- steampunk: gears + bolts + valve wheel -- */
   .gear { position: absolute; color: var(--metal); opacity: .5; }
@@ -473,6 +491,7 @@
   </div>
 
   <div class="gauge-wrap">
+    <div class="gauge-col">
     <svg class="gauge" viewBox="0 0 400 250" aria-hidden="true">
       <defs>
         <radialGradient id="faceGrad" cx="50%" cy="90%" r="90%">
@@ -506,6 +525,8 @@
     </div>
 
     <div class="phase-name" id="phaseName">Morgen</div>
+    </div>
+    <aside class="week" id="week" aria-label="Wochenübersicht"></aside>
   </div>
 
   <div class="progress" id="progress" aria-live="polite">
@@ -557,6 +578,16 @@
   // ---------- state ----------
   const today = new Date();
   const dayKey = today.getFullYear() + "-" + pad(today.getMonth()+1) + "-" + pad(today.getDate());
+  const WD = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+  function mondayKey(d){
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const off = (x.getDay()+6)%7;
+    x.setDate(x.getDate()-off);
+    return x.getFullYear()+"-"+pad(x.getMonth()+1)+"-"+pad(x.getDate());
+  }
+  const weekKey  = mondayKey(today);
+  const todayIdx = (today.getDay()+6)%7;
+  let   weekArr  = [0,0,0,0,0,0,0];
   let isFree = autoFree(today);
   let phase = autoPhase(today);
   let soundOn = true;
@@ -664,6 +695,7 @@
   const pcountEl  = document.getElementById("pcount");
   const ptotalEl  = document.getElementById("ptotal");
   const TOTAL     = PHASES.reduce((n,ph)=>n+ROUTINE[ph].length,0);
+  const weekEl    = document.getElementById("week");
 
   // build ticks + labels
   (function buildGauge(){
@@ -732,6 +764,7 @@
     sndBlock();
     sset("routine:done:"+dayKey, JSON.stringify([...done]));
     updateProgress();
+    updateWeek();
   }
 
   function updateProgress(){
@@ -739,6 +772,23 @@
     pcountEl.textContent = cnt;
     ptotalEl.textContent = TOTAL;
     pfillEl.style.width = TOTAL ? (cnt / TOTAL * 100) + "%" : "0%";
+  }
+
+  function buildWeek(){
+    weekEl.innerHTML = "";
+    const title = document.createElement("div"); title.className = "wk-title"; title.textContent = "Woche";
+    weekEl.appendChild(title);
+    WD.forEach((name,i)=>{
+      const row = document.createElement("div"); row.className = "wk-row" + (i===todayIdx ? " today" : "");
+      const d = document.createElement("span"); d.className = "wk-day"; d.textContent = name;
+      const c = document.createElement("span"); c.className = "wk-cnt"; c.textContent = "0"; c.dataset.i = i;
+      row.appendChild(d); row.appendChild(c); weekEl.appendChild(row);
+    });
+  }
+  function updateWeek(){
+    weekArr[todayIdx] = Math.min(done.size, TOTAL);
+    weekEl.querySelectorAll(".wk-cnt").forEach(el=>{ el.textContent = weekArr[+el.dataset.i] || 0; });
+    sset("routine:week:"+weekKey, JSON.stringify(weekArr));
   }
 
   function setPhase(p, withSound){
@@ -799,6 +849,7 @@
 
   applyMode(false);
   setPhase(phase, false);
+  buildWeek();
 
   // fill decorative gears
   const GEAR = '<svg viewBox="0 0 100 100">' +
@@ -838,6 +889,9 @@
     if (dStored){
       try { JSON.parse(dStored).forEach(id=>done.add(id)); renderBlocks(); } catch(e){}
     }
+    const wStored = await sget("routine:week:"+weekKey);
+    if (wStored){ try { const a = JSON.parse(wStored); if (Array.isArray(a)) for (let i=0;i<7;i++) weekArr[i] = +a[i] || 0; } catch(e){} }
+    updateWeek();
   })();
 })();
 </script>

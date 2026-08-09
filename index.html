@@ -96,7 +96,8 @@
   .machine::after { right: 6px; }
 
   /* ---------- HEADER ---------- */
-  .head { text-align: center; padding: 4px 62px 10px; }
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .head { flex: 1 1 auto; min-width: 0; text-align: center; padding: 4px 4px 10px; }
   .weekday {
     font-family: var(--font-head);
     font-weight: 600;
@@ -146,7 +147,7 @@
 
   /* cockpit: small toggle in top-right corner */
   .cockpit {
-    position: absolute; top: 34px; right: 12px; z-index: 3;
+    position: relative; z-index: 3;
     display: flex; flex-direction: column; align-items: center; gap: 6px;
   }
   .plaque {
@@ -315,18 +316,72 @@
     text-transform: uppercase; color: var(--text-dim); text-align: center; margin-bottom: 1px;
   }
   .wk-row {
+    position: relative;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 5px 7px; border-radius: 6px;
+    padding: 4px 5px;
     background: linear-gradient(165deg, var(--panel), var(--bg2));
-    border: 1px solid var(--metal-lo);
-    transition: border-color .4s ease, box-shadow .4s ease;
+    border: 4px solid transparent;
+    border-image: linear-gradient(135deg, #4a3d2e, #2a2118 45%, #47392a 55%, #22190f) 1;
+    transition: box-shadow .4s ease;
   }
   .wk-row .wk-day { font-family: var(--font-head); font-size: 11px; letter-spacing: .04em; color: var(--text-dim); }
   .wk-row .wk-cnt { font-family: var(--font-head); font-size: 12px; font-weight: 600; color: var(--accent); }
-  .wk-row.today { border-color: var(--accent); box-shadow: 0 0 8px var(--glow); }
+  .wk-row.today { box-shadow: 0 0 8px var(--glow); }
   .wk-row.today .wk-day { color: var(--accent); }
+
+  /* Medaillen: dicker, verzierter Metallrahmen wie ein historischer Bilderrahmen */
+  .wk-row.bronze {
+    border-image: linear-gradient(135deg,#e6a75c 0%,#a9611f 28%,#6f3f12 50%,#c47e3a 72%,#5e3410 100%) 1;
+    box-shadow: inset 0 0 4px rgba(0,0,0,.45), 0 0 3px rgba(169,97,31,.4);
+  }
+  .wk-row.bronze .wk-cnt { color: #e39b57; }
+  .wk-row.silber {
+    border-image: linear-gradient(135deg,#f4f7fb 0%,#aeb4be 28%,#6f757f 50%,#c9ced6 72%,#565b64 100%) 1;
+    box-shadow: inset 0 0 4px rgba(0,0,0,.4), 0 0 3px rgba(174,180,190,.45);
+  }
+  .wk-row.silber .wk-cnt { color: #eaeef4; }
+  .wk-row.gold {
+    border-image: linear-gradient(135deg,#ffe9a8 0%,#d9a441 26%,#8a5f16 50%,#f2c94c 72%,#6f4a10 100%) 1;
+    box-shadow: inset 0 0 5px rgba(0,0,0,.4), 0 0 9px rgba(230,181,60,.6);
+  }
+  .wk-row.gold .wk-cnt { color: #f6cf5a; }
+  /* Innenzier: dunkle Rabattlinie + feine Perlenreihe */
+  .wk-row.bronze::before, .wk-row.silber::before, .wk-row.gold::before {
+    content:""; position:absolute; inset:0; border:1px solid rgba(0,0,0,.4); pointer-events:none;
+  }
+  .wk-row.bronze::after, .wk-row.silber::after, .wk-row.gold::after {
+    content:""; position:absolute; inset:1px; border:1px dotted; pointer-events:none;
+  }
+  .wk-row.bronze::after { border-color: rgba(255,214,150,.5); }
+  .wk-row.silber::after { border-color: rgba(240,244,250,.55); }
+  .wk-row.gold::after  { border-color: rgba(255,233,168,.55); }
+  /* Tagesregeln (Checkboxen über der Ton-Zeile) */
+  .rules { display: flex; flex-direction: row; gap: 12px; margin: 12px 4px 2px; }
+  .rule {
+    display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer;
+    flex: 1 1 0; min-width: 0;
+    padding: 8px 8px; border-radius: 8px;
+    background: linear-gradient(165deg, var(--panel), var(--bg2));
+    border: 1px solid var(--metal-lo);
+    transition: border-color .35s ease, box-shadow .35s ease;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  .rule .rbox {
+    flex: 0 0 auto; width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid var(--metal-lo); background: var(--bg2);
+    position: relative; transition: background .35s ease, border-color .35s ease, box-shadow .35s ease;
+  }
+  .rule .rtxt { font-family: var(--font-body); font-size: 12px; white-space: nowrap; color: var(--text-dim); transition: color .35s ease; }
+  .rule.on { border-color: var(--accent); box-shadow: 0 0 8px var(--glow); }
+  .rule.on .rbox { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--glow); }
+  .rule.on .rbox::after {
+    content: ""; position: absolute; left: 4px; top: 0; width: 5px; height: 10px;
+    border: solid var(--bg1); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .rule.on .rtxt { color: var(--text); }
   .sound {
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    align-self: flex-start; flex: 0 0 auto; margin-top: 24px; white-space: nowrap;
     font-family: var(--font-head); font-size: 11px; letter-spacing: .1em;
     text-transform: uppercase; color: var(--text-dim);
     background: var(--panel); border: 1px solid var(--metal-lo);
@@ -343,7 +398,7 @@
   .machine.theme-free .deco-cyber { opacity: 1; }
 
   /* keep interactive content above decoration */
-  .head, .toprow, .gauge-wrap, .progress, .blocks, .foot { position: relative; z-index: 2; }
+  .topbar, .toprow, .gauge-wrap, .progress, .blocks, .rules { position: relative; z-index: 2; }
 
   /* -- steampunk: gears + bolts + valve wheel -- */
   .gear { position: absolute; color: var(--metal); opacity: .5; }
@@ -406,8 +461,8 @@
   @media (max-width: 480px) {
     .machine { padding: 16px 12px 20px; border-radius: 14px; }
     .machine::before { left: 4px; } .machine::after { right: 4px; }
-    .cockpit { top: 28px; right: 10px; }
-    .head { padding: 2px 54px 8px; }
+    .cockpit { top: 0; right: 0; }
+    .head { padding: 2px 4px 8px; }
     .weekday { letter-spacing: .12em; }
     .datum { font-size: 13px; }
     .toprow { margin: 4px 2px 12px; }
@@ -419,6 +474,10 @@
     .knobs { gap: 34px; }
     .kbtn { width: 44px; height: 44px; }
     .blocks { gap: 10px; margin: 8px 2px 4px; }
+    .rules { gap: 8px; margin: 10px 2px 2px; }
+    .rule { padding: 7px 5px; gap: 5px; }
+    .rule .rtxt { font-size: 11px; }
+    .rule .rbox { width: 15px; height: 15px; }
     .block, .card { min-height: 116px; }
     .face { padding: 11px 10px; }
     .face .ort { font-size: 13px; }
@@ -426,7 +485,7 @@
     .sound { padding: 8px 16px; font-size: 12px; }
   }
   @media (max-width: 360px) {
-    .head { padding: 2px 48px 6px; }
+    .head { padding: 2px 4px 6px; }
     .weekday { font-size: clamp(21px, 8.4vw, 32px); letter-spacing: .08em; }
     .switch { width: 46px; height: 24px; }
     .plate { min-width: 98px; }
@@ -465,16 +524,20 @@
     <div class="lights" id="lights"></div>
   </div>
 
-  <div class="cockpit">
-    <div class="plaque" id="plaque">Werktag</div>
-    <div class="switch" id="switch" role="button" tabindex="0" aria-label="Freier Tag umschalten" aria-pressed="false">
-      <span class="knob"></span>
+  <div class="topbar">
+    <div class="sound on" id="sound" role="button" tabindex="0" aria-label="Ton an/aus">
+      <span class="dot"></span><span id="soundTxt">Ton an</span>
     </div>
-  </div>
-
-  <div class="head">
-    <div class="weekday" id="weekday">Wochentag</div>
-    <div class="datum" id="datum">Datum</div>
+    <div class="head">
+      <div class="weekday" id="weekday">Wochentag</div>
+      <div class="datum" id="datum">Datum</div>
+    </div>
+    <div class="cockpit">
+      <div class="plaque" id="plaque">Werktag</div>
+      <div class="switch" id="switch" role="button" tabindex="0" aria-label="Freier Tag umschalten" aria-pressed="false">
+        <span class="knob"></span>
+      </div>
+    </div>
   </div>
 
   <div class="toprow">
@@ -536,11 +599,7 @@
 
   <div class="blocks" id="blocks"></div>
 
-  <div class="foot">
-    <div class="sound on" id="sound" role="button" tabindex="0" aria-label="Ton an/aus">
-      <span class="dot"></span><span id="soundTxt">Ton an</span>
-    </div>
-  </div>
+  <div class="rules" id="rules"></div>
 </div>
 
 <script>
@@ -694,8 +753,12 @@
   const pfillEl   = document.getElementById("pfill");
   const pcountEl  = document.getElementById("pcount");
   const ptotalEl  = document.getElementById("ptotal");
-  const TOTAL     = PHASES.reduce((n,ph)=>n+ROUTINE[ph].length,0);
+  const RULES     = ["Wasser", "Freizeit 21", "2 Mahlzeiten"];
+  const TOTAL     = PHASES.reduce((n,ph)=>n+ROUTINE[ph].length,0) + RULES.length;
   const weekEl    = document.getElementById("week");
+  const rulesEl   = document.getElementById("rules");
+  const BRONZE    = Math.max(1, Math.ceil(TOTAL * 0.30));   // 5 bei 16
+  const SILVER    = Math.max(1, Math.ceil(TOTAL * 2 / 3));  // 11 bei 16
 
   // build ticks + labels
   (function buildGauge(){
@@ -785,10 +848,50 @@
       row.appendChild(d); row.appendChild(c); weekEl.appendChild(row);
     });
   }
+  function medalFor(cnt){
+    if (cnt >= TOTAL)  return "gold";
+    if (cnt >= SILVER) return "silber";
+    if (cnt >= BRONZE) return "bronze";
+    return "";
+  }
   function updateWeek(){
     weekArr[todayIdx] = Math.min(done.size, TOTAL);
-    weekEl.querySelectorAll(".wk-cnt").forEach(el=>{ el.textContent = weekArr[+el.dataset.i] || 0; });
+    weekEl.querySelectorAll(".wk-row").forEach((row,i)=>{
+      const cnt = weekArr[i] || 0;
+      const cntEl = row.querySelector(".wk-cnt"); if (cntEl) cntEl.textContent = cnt;
+      row.classList.remove("bronze","silber","gold");
+      const m = medalFor(cnt); if (m) row.classList.add(m);
+    });
     sset("routine:week:"+weekKey, JSON.stringify(weekArr));
+  }
+
+  function ruleId(i){ return "rule-" + i; }
+  function toggleRule(row, id){
+    if (done.has(id)) { done.delete(id); row.classList.remove("on"); }
+    else { done.add(id); row.classList.add("on"); }
+    sndBlock();
+    sset("routine:done:"+dayKey, JSON.stringify([...done]));
+    updateProgress();
+    updateWeek();
+  }
+  function buildRules(){
+    rulesEl.innerHTML = "";
+    RULES.forEach((txt,i)=>{
+      const id = ruleId(i);
+      const row = document.createElement("div");
+      row.className = "rule" + (done.has(id) ? " on" : "");
+      row.setAttribute("role","button"); row.tabIndex = 0;
+      const box = document.createElement("span"); box.className = "rbox";
+      const t = document.createElement("span"); t.className = "rtxt"; t.textContent = txt;
+      row.appendChild(box); row.appendChild(t);
+      const toggle = ()=> toggleRule(row, id);
+      row.addEventListener("click", toggle);
+      row.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); }});
+      rulesEl.appendChild(row);
+    });
+  }
+  function refreshRules(){
+    rulesEl.querySelectorAll(".rule").forEach((row,i)=>{ row.classList.toggle("on", done.has(ruleId(i))); });
   }
 
   function setPhase(p, withSound){
@@ -850,6 +953,7 @@
   applyMode(false);
   setPhase(phase, false);
   buildWeek();
+  buildRules();
 
   // fill decorative gears
   const GEAR = '<svg viewBox="0 0 100 100">' +
@@ -889,6 +993,7 @@
     if (dStored){
       try { JSON.parse(dStored).forEach(id=>done.add(id)); renderBlocks(); } catch(e){}
     }
+    refreshRules();
     const wStored = await sget("routine:week:"+weekKey);
     if (wStored){ try { const a = JSON.parse(wStored); if (Array.isArray(a)) for (let i=0;i<7;i++) weekArr[i] = +a[i] || 0; } catch(e){} }
     updateWeek();
